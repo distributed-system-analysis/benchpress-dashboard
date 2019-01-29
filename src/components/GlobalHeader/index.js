@@ -48,20 +48,6 @@ class GlobalHeader extends PureComponent {
           />
         </div>
         <div className={styles.right}>
-          <Tooltip
-            title="Search"
-            onClick={() => {
-              dispatch(
-                routerRedux.push({
-                  pathname: '/search',
-                })
-              );
-            }}
-          >
-            <a className={styles.action}>
-              <Icon type="search" />
-            </a>
-          </Tooltip>
           <Tooltip title="Help">
             <a
               target="_blank"

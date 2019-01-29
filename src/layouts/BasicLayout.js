@@ -121,7 +121,7 @@ class BasicLayout extends ReactJS.PureComponent {
   getPageTitle() {
     const { routerData, location } = this.props;
     const { pathname } = location;
-    let title = 'Pbench Dashboard';
+    let title = 'Benchpress';
     let currRouterData = null;
     // match params path
     Object.keys(routerData).forEach(key => {
@@ -130,7 +130,7 @@ class BasicLayout extends ReactJS.PureComponent {
       }
     });
     if (currRouterData && currRouterData.name) {
-      title = `${currRouterData.name} - Pbench Dashboard`;
+      title = `${currRouterData.name} - Benchpress Dashboard`;
     }
     return title;
   }
@@ -256,8 +256,8 @@ class BasicLayout extends ReactJS.PureComponent {
             <GlobalFooter
               links={[
                 {
-                  key: 'Pbench Dashboard',
-                  title: 'Pbench Dashboard',
+                  key: 'Benchpress Dashboard',
+                  title: 'Benchpress Dashboard',
                   href: 'https://example.com',
                   blankTarget: true,
                 },
@@ -268,8 +268,8 @@ class BasicLayout extends ReactJS.PureComponent {
                   blankTarget: true,
                 },
                 {
-                  key: 'PBench',
-                  title: 'PBench',
+                  key: 'Benchpress',
+                  title: 'Benchpress',
                   href: 'http://example.com/',
                   blankTarget: true,
                 },

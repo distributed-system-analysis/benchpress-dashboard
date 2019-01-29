@@ -1,73 +1,68 @@
-import { Component } from 'react';
+import React, { Component } from 'react';
 import { connect } from 'dva';
 import { routerRedux } from 'dva/router';
 import { Tag, Card, Table, Input, Button } from 'antd';
 import PageHeaderLayout from '../../layouts/PageHeaderLayout';
 
 @connect(({ global, dashboard, loading }) => ({
-  selectedIndices: global.selectedIndices,
-  results: dashboard.results,
-  selectedController: dashboard.selectedController,
+  runs: dashboard.runs,
+  selectedHost: dashboard.selectedHost,
   datastoreConfig: global.datastoreConfig,
-  loading: loading.effects['dashboard/fetchResults'],
+  loadingRuns: loading.effects['dashboard/fetchRuns'],
 }))
-export default class Results extends Component {
+export default class Runs extends Component {
   constructor(props) {
     super(props);
 
     this.state = {
-      resultSearch: [],
+      runSearch: [],
       selectedRowKeys: [],
-      selectedRowNames: [],
-      loading: false,
       loadingButton: false,
       searchText: '',
-      filtered: false,
     };
   }
 
   componentDidMount() {
-    const { dispatch, datastoreConfig, selectedIndices, selectedController } = this.props;
+    const { dispatch, datastoreConfig, selectedHost } = this.props;
 
     dispatch({
-      type: 'dashboard/fetchResults',
+      type: 'dashboard/fetchRuns',
       payload: {
-        datastoreConfig: datastoreConfig,
-        selectedIndices: selectedIndices,
-        controller: selectedController,
+        datastoreConfig,
+        selectedHost,
       },
     });
   }
 
   openNotificationWithIcon = type => {
     notification[type]({
-      message: 'Please select two results for comparison.',
+      message: 'Please select two runs for comparison.',
       placement: 'bottomRight',
     });
   };
 
   onCompareResults = () => {
     const { selectedRowKeys } = this.state;
-    const { selectedController, results } = this.props;
-    var selectedResults = [];
+    const { selectedHost, runs } = this.props;
+    let selectedRuns = [];
     for (var item in selectedRowKeys) {
-      var result = results[selectedRowKeys[item]];
-      result['controller'] = selectedController;
-      selectedResults.push(results[selectedRowKeys[item]]);
+      var run = runs[selectedRowKeys[item]];
+      run['controller'] = selectedHost;
+      selectedRuns.push(runs[selectedRowKeys[item]]);
     }
-    this.compareResults(selectedResults);
+    this.compareResults(selectedRuns);
   };
 
   onSelectChange = selectedRowKeys => {
-    const { dispatch, results } = this.props;
-    let selectedRowNames = [];
+    const { dispatch, runs } = this.props;
+    const selectedRowNames = [];
     selectedRowKeys.map(row => {
-      selectedRowNames.push(results[row]);
+      selectedRowNames.push(runs[row]);
     });
     this.setState({ selectedRowKeys });
 
     dispatch({
-      type: 'dashboard/updateSelectedResults',
+      type: 'dashboard/updateSelectedRuns',
       payload: selectedRowNames,
     });
   };
@@ -78,20 +73,20 @@ export default class Results extends Component {
 
   onSearch = () => {
     const { searchText } = this.state;
-    const { results } = this.props;
+    const { runs } = this.props;
     const reg = new RegExp(searchText, 'gi');
-    var resultSearch = results.slice();
+    let runSearch = runs.slice();
     this.setState({
       filtered: !!searchText,
-      resultSearch: resultSearch
+      runSearch: runSearch
         .map((record, i) => {
-          const match = record.result.match(reg);
+          const match = record.run.match(reg);
           if (!match) {
             return null;
           }
           return {
             ...record,
-            result: (
+            run: (
               <span key={i}>
                 {record['run.name'].split(reg).map(
                   (text, i) =>
@@ -122,24 +117,24 @@ export default class Results extends Component {
     );
   };
 
-  retrieveResults = params => {
+  fetchRunSummary = params => {
     const { dispatch } = this.props;
 
     dispatch({
-      type: 'dashboard/updateSelectedResults',
-      payload: params,
+      type: 'dashboard/updateSelectedRuns',
+      payload: [params],
+    }).then(() => {
+      dispatch(
+        routerRedux.push({
+          pathname: '/dashboard/summary',
+        })
+      );
     });
-
-    dispatch(
-      routerRedux.push({
-        pathname: '/dashboard/summary',
-      })
-    );
   };
 
   render() {
-    const { resultSearch, loadingButton, selectedRowKeys } = this.state;
-    const { selectedController, results, loading } = this.props;
+    const { runSearch, loadingButton, selectedRowKeys } = this.state;
+    const { selectedHost, runs, loadingRuns } = this.props;
     const rowSelection = {
       selectedRowKeys,
       onChange: this.onSelectChange,
@@ -147,41 +142,46 @@ export default class Results extends Component {
       fixed: true,
     };
     const hasSelected = selectedRowKeys.length > 0;
-    for (var result in results) {
-      results[result]['key'] = result;
+    for (var run in runs) {
+      runs[run]['key'] = run;
     }
 
     const columns = [
       {
-        title: 'Result',
-        dataIndex: 'run.name',
-        key: 'run.name',
-        sorter: (a, b) => compareByAlph(a['run.name'], b['run.name']),
+        title: 'Run ID',
+        dataIndex: 'run.id',
+        key: 'run.id',
       },
       {
-        title: 'Config',
-        dataIndex: 'run.config',
-        key: 'run.config',
+        title: 'Harness',
+        dataIndex: 'run.harness',
+        key: 'run.harness',
       },
       {
-        title: 'Start Time',
-        dataIndex: 'run.startRun',
-        key: 'run.startRun',
-        sorter: (a, b) => a['run.startRunUnixTimestamp'] - b['run.startRunUnixTimestamp'],
+        title: 'Benchmark',
+        dataIndex: 'run.bench',
+        key: 'run.bench',
       },
       {
-        title: 'End Time',
-        dataIndex: 'run.endRun',
-        key: 'run.endRun',
+        title: 'User',
+        dataIndex: 'run.user',
+        key: 'run.user',
+      },
+      {
+        title: '# of Docs',
+        dataIndex: 'run.docs',
+        key: 'run.docs',
       },
     ];
 
     return (
-      <PageHeaderLayout title={selectedController}>
+      <PageHeaderLayout title={selectedHost}>
         <Card bordered={false}>
           <Input
             style={{ width: 300, marginRight: 8, marginTop: 16 }}
-            ref={ele => (this.searchInput = ele)}
+            ref={ele => {
+              return (this.searchInput = ele);
+            }}
             placeholder="Search Results"
             value={this.state.searchText}
             onChange={this.onInputChange}
@@ -209,7 +209,7 @@ export default class Results extends Component {
             >
               {selectedRowKeys.map((row, i) => (
                 <Tag key={i} id={row}>
-                  {results[row]['run.name']}
+                  {runs[row]['run.name']}
                 </Tag>
               ))}
             </Card>
@@ -220,9 +220,9 @@ export default class Results extends Component {
             style={{ marginTop: 20 }}
             rowSelection={rowSelection}
             columns={columns}
-            dataSource={resultSearch.length > 0 ? resultSearch : results}
-            onRowClick={this.retrieveResults.bind(this)}
-            loading={loading}
+            dataSource={runSearch.length > 0 ? runsearch : runs}
+            onRowClick={this.fetchRunSummary.bind(this)}
+            loading={loadingRuns}
             pagination={{ pageSize: 20 }}
             bordered
           />

@@ -2,7 +2,7 @@ const path = require('path');
 
 export default {
   define: {
-    'process.env': process.env.NODE_ENV
+    'process.env': process.env.NODE_ENV,
   },
   entry: 'src/index.js',
   extraBabelPlugins: [['import', { libraryName: 'antd', libraryDirectory: 'es', style: true }]],
@@ -24,5 +24,8 @@ export default {
   },
   disableDynamicImport: true,
   publicPath: process.env.NODE_ENV === 'development' ? '/' : '/dashboard/',
-  hash: true,
+  manifest: {
+    basePath: '/',
+  },
+  hash: false,
 };

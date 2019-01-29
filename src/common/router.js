@@ -74,14 +74,14 @@ export const getRouterData = app => {
     '/': {
       component: dynamicWrapper(app, ['user'], () => import('../layouts/BasicLayout')),
     },
-    '/dashboard/controllers': {
+    '/dashboard/hosts': {
       component: dynamicWrapper(app, ['dashboard', 'global'], () =>
-        import('../routes/Dashboard/Controllers')
+        import('../routes/Dashboard/Hosts')
       ),
     },
-    '/dashboard/results': {
+    '/dashboard/runs': {
       component: dynamicWrapper(app, ['dashboard', 'global'], () =>
-        import('../routes/Dashboard/Results')
+        import('../routes/Dashboard/Runs')
       ),
     },
     '/dashboard/summary': {
@@ -100,7 +100,9 @@ export const getRouterData = app => {
       ),
     },
     '/search': {
-      component: dynamicWrapper(app, ['search', 'global', 'dashboard'], () => import('../routes/Search/SearchList')),
+      component: dynamicWrapper(app, ['search', 'global', 'dashboard'], () =>
+        import('../routes/Search/SearchList')
+      ),
     },
     '/exception/403': {
       component: dynamicWrapper(app, [], () => import('../routes/Exception/403')),
@@ -118,7 +120,7 @@ export const getRouterData = app => {
     },
     '/user': {
       component: dynamicWrapper(app, [], () => import('../layouts/UserLayout')),
-    }
+    },
     // '/user/:id': {
     //   component: dynamicWrapper(app, [], () => import('../routes/User/SomeComponent')),
     // },

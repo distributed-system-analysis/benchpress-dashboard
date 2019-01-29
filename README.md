@@ -1,6 +1,6 @@
 ## Foreword
 
-Pbench Dashboard is a web-based platform for consuming indexed performance benchmark data. The platform provides a consolidated view of benchmark data within tables, charts, and other powerful visualizations. Users are able to quickly navigate through benchmark data and tune analytics through comparison tools for in-depth analysis.
+Benchpress Dashboard is a web-based platform for consuming indexed performance benchmark data. The platform provides a consolidated view of benchmark data within tables, charts, and other powerful visualizations. Users are able to quickly navigate through benchmark data and tune analytics through comparison tools for in-depth analysis.
 
 ## Scaffolding
 
@@ -70,9 +70,10 @@ Create and include a JSON config file in the root directory. Please reference th
 ```JSON
 {
    "elasticsearch": "http://elasticsearch.example.com",
-   "results": "http://results.example.com",
-   "prefix": "example.prefix",
-   "run_index": "example.index"
+   "run_index": "example.index",
+   "iteration_index": "example.index",
+   "sample_index": "example.index",
+   "metric_index": "example.index"
 }
 ```
 

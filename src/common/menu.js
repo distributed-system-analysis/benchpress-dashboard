@@ -4,13 +4,8 @@ const menuData = [
   {
     name: 'Dashboard',
     icon: 'dashboard',
-    path: 'dashboard/controllers',
+    path: 'dashboard/hosts',
   },
-  {
-    name: 'Search',
-    icon: 'search',
-    path: 'search'
-  }
 ];
 
 function formatter(data, parentPath = '/', parentAuthority) {

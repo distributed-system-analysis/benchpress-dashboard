@@ -1,5 +1,7 @@
 {
   "elasticsearch": "http://elasticsearch.perf.lab.eng.bos.redhat.com:9286",
-  "production": "http://pbench.perf.lab.eng.bos.redhat.com", 
-  "run_index": "cdmv3dev-run"
+  "run_index": "cdmv3dev-run",
+  "iteration_index": "cdmv3dev-iteration",
+  "sample_index": "cdmv3dev-sample",
+  "metric_index": "cdmv3dev-metric"
 }

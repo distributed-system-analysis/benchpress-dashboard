@@ -143,7 +143,7 @@ export default class SearchList extends Component {
       payload: params['run.controller'],
     }).then(() => {
       dispatch({
-        type: 'dashboard/updateSelectedResults',
+        type: 'dashboard/updateSelectedRuns',
         payload: params,
       }).then(() => {
         dispatch(

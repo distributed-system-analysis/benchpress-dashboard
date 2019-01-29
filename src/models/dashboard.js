@@ -1,68 +1,85 @@
 import {
-  queryControllers,
-  queryResults,
+  queryHosts,
+  queryRuns,
   queryResult,
   queryIterations,
+  queryIterationTableSchema,
 } from '../services/dashboard';
+import _ from 'lodash';
 
 export default {
   namespace: 'dashboard',
 
   state: {
-    controller: '',
-    result: [],
-    results: [],
+    run: [],
+    runs: [],
     configCategories: [],
     configData: [],
     iterations: [],
-    controllers: [],
-    selectedResults: [],
-    selectedController: '',
+    hosts: [],
+    selectedRuns: [],
+    selectedHost: '',
     loading: false,
   },
 
   effects: {
-    *fetchControllers({ payload }, { call, put }) {
-      let response = yield call(queryControllers, payload);
+    *fetchHosts({ payload }, { call, put }) {
+      let response = yield call(queryHosts, payload);
 
-      let controllers = [];
-      response.aggregations.controllers.buckets.map(controller => {
-        controllers.push({
-          key: controller.key,
-          controller: controller.key,
-          results: controller.doc_count,
-          last_modified_value: controller.runs.value,
-          last_modified_string: controller.runs.value_as_string,
+      let hosts = [];
+      response.aggregations.hosts.buckets.map(host => {
+        hosts.push({
+          key: host.key,
+          host: host.key,
+          runs: host.doc_count,
         });
       });
 
       yield put({
-        type: 'getControllers',
-        payload: controllers,
+        type: 'getHosts',
+        payload: hosts,
       });
     },
-    *fetchResults({ payload }, { call, put }) {
-      let response = yield call(queryResults, payload);
+    *fetchRuns({ payload }, { call, put }) {
+      let response = yield call(queryRuns, payload);
 
-      let results = [];
-      response.hits.hits.map(result => {
-        results.push({
-          key: result.fields['run.name'][0],
-          ['run.name']: result.fields['run.name'][0],
-          ['run.config']: result.fields['run.config'][0],
-          ['run.prefix']:
-            typeof result.fields['run.prefix'] !== 'undefined'
-              ? result.fields['run.prefix'][0]
-              : null,
-          startRunUnixTimestamp: Date.parse(result.fields['run.start_run'][0]),
-          ['run.startRun']: result.fields['run.start_run'][0],
-          ['run.endRun']: result.fields['run.end_run'][0],
+      let runs = [];
+      response.aggregations.runs.buckets.map(run => {
+        runs.push({
+          key: run.key,
+          ['run.docs']: run.doc_count,
+          ['run.id']: run.key,
+          ['run.harness']: run['run.harness'].buckets[0].key,
+          ['run.user']: run['run.email'].buckets[0].key,
+          ['run.bench']: run['run.bench'].buckets[0].key,
         });
       });
 
       yield put({
-        type: 'getResults',
-        payload: results,
+        type: 'getRuns',
+        payload: runs,
+      });
+    },
+    *fetchIterations({ payload }, { call, put }) {
+      let response = yield call(queryIterations, payload);
+      const { selectedRuns } = payload;
+
+      let iterations = {};
+      response.forEach((run, index) => {
+        iterations[selectedRuns[index]['run.id']] = run.hits.hits;
+      });
+
+      yield put({
+        type: 'getIterations',
+        payload: iterations,
+      });
+    },
+    *fetchIterationTableSchema({ payload }, { call, put }) {
+      let response = yield call(queryIterationTableSchema, payload);
+
+      yield put({
+        type: 'getIterationTableSchema',
+        payload: response,
       });
     },
     *fetchResult({ payload }, { call, put }) {
@@ -75,33 +92,15 @@ export default {
         payload: result,
       });
     },
-    *fetchIterations({ payload }, { call, put }) {
-      let response = yield call(queryIterations, payload);
-
-      let iterations = [];
-      response.map((iteration, index) => {
-        iterations.push({
-          iterationData: iteration.data,
-          controllerName: iteration.config.url.split('/')[4],
-          resultName: iteration.config.url.split('/')[5],
-          tableId: index,
-        });
-      });
-
+    *updateSelectedHost({ payload }, { select, put }) {
       yield put({
-        type: 'getIterations',
-        payload: iterations,
-      });
-    },
-    *updateSelectedController({ payload }, { select, put }) {
-      yield put({
-        type: 'modifySelectedController',
+        type: 'modifySelectedHost',
         payload: payload,
       });
     },
-    *updateSelectedResults({ payload }, { select, put }) {
+    *updateSelectedRuns({ payload }, { select, put }) {
       yield put({
-        type: 'modifySelectedResults',
+        type: 'modifySelectedRuns',
         payload: payload,
       });
     },
@@ -120,22 +119,22 @@ export default {
   },
 
   reducers: {
-    getControllers(state, { payload }) {
+    getHosts(state, { payload }) {
       return {
         ...state,
-        controllers: payload,
+        hosts: payload,
       };
     },
-    getResults(state, { payload }) {
+    getRuns(state, { payload }) {
       return {
         ...state,
-        results: payload,
+        runs: payload,
       };
     },
     getResult(state, { payload }) {
       return {
         ...state,
-        result: payload,
+        run: payload,
       };
     },
     getIterations(state, { payload }) {
@@ -144,16 +143,22 @@ export default {
         iterations: payload,
       };
     },
-    modifySelectedController(state, { payload }) {
+    getIterationTableSchema(state, { payload }) {
       return {
         ...state,
-        selectedController: payload,
+        iterationTableSchema: payload,
       };
     },
-    modifySelectedResults(state, { payload }) {
+    modifySelectedHost(state, { payload }) {
       return {
         ...state,
-        selectedResults: payload,
+        selectedHost: payload,
+      };
+    },
+    modifySelectedRuns(state, { payload }) {
+      return {
+        ...state,
+        selectedRuns: payload,
       };
     },
     modifyConfigCategories(state, { payload }) {

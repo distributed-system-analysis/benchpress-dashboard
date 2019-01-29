@@ -1,41 +1,58 @@
-import request from '../utils/request';
 import axios from 'axios';
 
-function parseMonths(datastoreConfig, selectedIndices) {
-  let indices = '';
+import request from '../utils/request';
 
-  selectedIndices.map(value => {
-    indices += datastoreConfig.prefix + datastoreConfig.run_index + value + ',';
-  });
+export async function queryHosts(params) {
+  const { datastoreConfig } = params;
 
-  return indices;
-}
-
-export async function queryControllers(params) {
-  const { datastoreConfig, selectedIndices } = params;
-
-  const endpoint =
-    datastoreConfig.elasticsearch +
-    '/' +
-    parseMonths(datastoreConfig, selectedIndices) +
-    '/_search';
+  const endpoint = datastoreConfig.elasticsearch + '/' + datastoreConfig.run_index + '/_search';
 
   return request(endpoint, {
     method: 'POST',
     body: {
       aggs: {
-        controllers: {
+        hosts: {
           terms: {
-            field: 'controller',
-            size: 0,
-            order: {
-              runs: 'desc',
-            },
+            field: 'run.host',
+          },
+        },
+      },
+    },
+  });
+}
+
+export async function queryRuns(params) {
+  const { datastoreConfig, selectedHost } = params;
+
+  const endpoint = datastoreConfig.elasticsearch + '/' + datastoreConfig.run_index + '/_search';
+
+  return request(endpoint, {
+    method: 'POST',
+    body: {
+      query: {
+        term: {
+          'run.host': selectedHost,
+        },
+      },
+      aggs: {
+        runs: {
+          terms: {
+            field: 'run.id',
           },
           aggs: {
-            runs: {
-              min: {
-                field: 'run.start_run',
+            'run.bench': {
+              terms: {
+                field: 'run.bench.name',
+              },
+            },
+            'run.email': {
+              terms: {
+                field: 'run.user.email',
+              },
+            },
+            'run.harness': {
+              terms: {
+                field: 'run.harness_name',
               },
             },
           },
@@ -45,50 +62,96 @@ export async function queryControllers(params) {
   });
 }
 
-export async function queryResults(params) {
-  const { datastoreConfig, selectedIndices, controller } = params;
+export async function queryIterations(params) {
+  const { datastoreConfig, selectedRuns } = params;
 
   const endpoint =
     datastoreConfig.elasticsearch +
     '/' +
-    parseMonths(datastoreConfig, selectedIndices) +
-    '/_search';
+    datastoreConfig.metric_index +
+    '/_search?filter_path=hits.hits._source';
+
+  let iterationRequests = [];
+  selectedRuns.forEach(run => {
+    iterationRequests.push(
+      request(endpoint, {
+        method: 'POST',
+        body: {
+          query: {
+            bool: {
+              filter: [
+                {
+                  term: {
+                    'run.id': run['run.id'],
+                  },
+                },
+              ],
+            },
+          },
+        },
+      })
+    );
+  });
+
+  return Promise.all(iterationRequests).then(response => {
+    return response;
+  });
+}
+
+export async function queryIterationTableSchema(params) {
+  const { datastoreConfig, selectedRunId } = params;
+
+  const endpoint =
+    datastoreConfig.elasticsearch +
+    '/' +
+    datastoreConfig.metric_index +
+    '/_search?filter_path=aggregations.source.buckets';
 
   return request(endpoint, {
     method: 'POST',
     body: {
-      fields: [
-        'run.controller',
-        'run.start_run',
-        'run.end_run',
-        'run.name',
-        'run.config',
-        'run.prefix',
-      ],
-      sort: {
-        'run.end_run': {
-          order: 'desc',
-          ignore_unmapped: true,
-        },
-      },
       query: {
         term: {
-          'run.controller': controller,
+          'run.id': selectedRunId,
         },
       },
-      size: 5000,
+      aggs: {
+        source: {
+          terms: {
+            field: 'metric.source',
+          },
+          aggs: {
+            type: {
+              terms: {
+                field: 'metric.type',
+              },
+              aggs: {
+                device: {
+                  terms: {
+                    field: 'metric.device',
+                  },
+                  aggs: {
+                    host: {
+                      terms: {
+                        field: 'metric.host',
+                      },
+                    },
+                  },
+                },
+              },
+            },
+          },
+        },
+      },
     },
   });
 }
 
 export async function queryResult(params) {
-  const { datastoreConfig, selectedIndices, result } = params;
+  const { datastoreConfig, result } = params;
 
   const endpoint =
-    datastoreConfig.elasticsearch +
-    '/' +
-    parseMonths(datastoreConfig, selectedIndices) +
-    '/_search?source=';
+    datastoreConfig.elasticsearch + '/' + datastoreConfig.run_index + '/_search?source=';
 
   return request(endpoint, {
     method: 'POST',
@@ -101,54 +164,4 @@ export async function queryResult(params) {
       sort: '_index',
     },
   });
-}
-
-export async function queryIterations(params) {
-  const { datastoreConfig, selectedResults } = params;
-
-  let iterationRequests = [];
-  if (typeof params.selectedResults != undefined) {
-    selectedResults.map(result => {
-      if (result.controller.includes('.')) {
-        axios.get(
-          datastoreConfig.results +
-            '/results/' +
-            encodeURI(result.controller.slice(0, result.controller.indexOf('.'))) +
-            (result['run.prefix'] != null ? '/' + result['run.prefix'] : '') +
-            '/' +
-            encodeURI(result['run.name']) +
-            '/result.json'
-        );
-      }
-      iterationRequests.push(
-        axios.get(
-          datastoreConfig.results +
-            '/results/' +
-            encodeURI(result.controller.slice(0, result.controller.indexOf('.'))) +
-            (result['run.prefix'] != null ? '/' + result['run.prefix'] : '') +
-            '/' +
-            encodeURI(result['run.name']) +
-            '/result.json'
-        )
-      );
-    });
-
-    return Promise.all(iterationRequests)
-      .then(response => {
-        let iterations = [];
-        response.map((iteration, index) => {
-          iterations.push({
-            iterationData: iteration.data,
-            controllerName: iteration.config.url.split('/')[4],
-            resultName: iteration.config.url.split('/')[5],
-            tableId: index,
-          });
-        });
-
-        return iterations;
-      })
-      .catch(error => {
-        console.log(error);
-      });
-  }
 }

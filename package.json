@@ -1,6 +1,6 @@
 {
-  "name": "Pbench-Dashboard",
-  "version": "2.0.0",
+  "name": "benchpress_dashboard",
+  "version": "1.0.0",
   "description": "UI solution for scalable visualization of benchmark data.",
   "private": true,
   "scripts": {
@@ -23,9 +23,10 @@
   "dependencies": {
     "@antv/data-set": "^0.8.0",
     "@babel/polyfill": "^7.0.0-beta.36",
+    "@babel/runtime": "^7.3.1",
     "@nivo/bar": "^0.36.0",
     "ant-design-pro": "^2.1.1",
-    "antd": "3.7.3",
+    "antd": "3.13.2",
     "axios": "^0.18.0",
     "bizcharts": "^3.1.10",
     "bizcharts-plugin-slider": "^2.0.1",
@@ -36,6 +37,7 @@
     "jschart": "^1.0.2",
     "lodash": "^4.17.10",
     "lodash-decorators": "^6.0.0",
+    "moment": "^2.24.0",
     "numeral": "^2.0.6",
     "omit.js": "^1.0.0",
     "path-to-regexp": "^2.1.0",
