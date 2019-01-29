@@ -1,0 +1,14 @@
+[servers:children]
+ui-server
+
+[servers:vars]
+results_url="http://pbench.perf.lab.eng.bos.redhat.com"
+run_index="run."
+
+[ui-server]
+dhcp31-81.perf.lab.eng.bos.redhat.com
+
+[ui-server:vars]
+elasticsearch_url="http://elasticsearch.perf.lab.eng.bos.redhat.com:9280"
+results_url="http://pbench.perf.lab.eng.bos.redhat.com"
+prefix="dsa.pbench."
