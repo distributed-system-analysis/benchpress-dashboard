@@ -24,8 +24,5 @@ export default {
   },
   disableDynamicImport: true,
   publicPath: process.env.NODE_ENV === 'development' ? '/' : '/dashboard/',
-  manifest: {
-    basePath: '/',
-  },
   hash: false,
 };
