@@ -66,7 +66,12 @@ export default {
 
       let iterations = {};
       response.forEach((run, index) => {
-        iterations[selectedRuns[index]['run.id']] = run.hits.hits;
+        const runIterations = [];
+        run.hits.hits.forEach(iteration => {
+          runIterations.push(iteration._source.iteration);
+        });
+
+        iterations[selectedRuns[index]['run.id']] = runIterations;
       });
 
       yield put({

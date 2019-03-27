@@ -68,10 +68,10 @@ export async function queryIterations(params) {
   const endpoint =
     datastoreConfig.elasticsearch +
     '/' +
-    datastoreConfig.metric_index +
+    datastoreConfig.iteration_index +
     '/_search?filter_path=hits.hits._source';
 
-  let iterationRequests = [];
+  const iterationRequests = [];
   selectedRuns.forEach(run => {
     iterationRequests.push(
       request(endpoint, {
