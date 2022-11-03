@@ -1,5 +1,7 @@
 ## Foreword
 
+*** Obsolete ***
+
 Benchpress Dashboard is a web-based platform for consuming indexed performance benchmark data. The platform provides a consolidated view of benchmark data within tables, charts, and other powerful visualizations. Users are able to quickly navigate through benchmark data and tune analytics through comparison tools for in-depth analysis.
 
 ## Scaffolding
